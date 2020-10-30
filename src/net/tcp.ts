@@ -1,4 +1,4 @@
-import { Parser, Option, Command, buildGMCP, buildTelnetCommand } from "./telnet.ts";
+import { Parser, Option, Command, buildGMCP, buildTelnetCommand, CompatibilityTable } from "./telnet.ts";
 import { v4 } from "https://deno.land/std@0.75.0/uuid/mod.ts";
 
 export class TcpClient {
@@ -16,6 +16,7 @@ export class TcpClient {
       onNegotiation: handlers.onNegotiation.bind(this),
       onSubnegotiation: handlers.onSubnegotiation.bind(this),
       onGMCP: handlers.onGMCP.bind(this),
+      onSend: handlers.onSend.bind(this),
     }
 
     // Bind parser events to internal handler methods
@@ -24,6 +25,7 @@ export class TcpClient {
     this.parser.on("negotiation", this.handlers.onNegotiation);
     this.parser.on("subnegotiation", this.handlers.onSubnegotiation);
     this.parser.on("gmcp", this.handlers.onGMCP);
+    this.parser.on("send", this.handlers.onSend);
   }
   public async loop(): Promise<void> {
     for await (const b of Deno.iter(this.conn)) {
@@ -50,6 +52,7 @@ export interface ITelnetHandler {
   onNegotiation: (this: TcpClient, command: number, option: number) => Promise<void>;
   onSubnegotiation: (this: TcpClient, option: number, data: Uint8Array) => Promise<void>;
   onGMCP: (this: TcpClient, namespace: string, data: string | string[] | { [key: string]: any }) => Promise<void>;
+  onSend: (this: TcpClient, data: Uint8Array) => Promise<void>;
 }
 
 export interface ITcpServerConfig {
@@ -89,6 +92,10 @@ export class TcpServer {
       async onSubnegotiation(option, data) {
         await self.emitEvent(this, "subnegotiation", option, data);
         await config.handlers.onSubnegotiation.call(this, option, data);
+      },
+      async onSend(data) {
+        await self.emitEvent(this, "send", data);
+        await config.handlers.onSend.call(this, data);
       }
     };
     this.listener = Deno.listen({ hostname: this.host, port: this.port, transport: "tcp" });
@@ -120,7 +127,6 @@ export class TcpServer {
       let client: TcpClient | null = new TcpClient(conn, this.handlers);
       const guid: string = client.guid;
       this.clientList.set(client.guid, client);
-      await this.emitEvent(this, "connect", client);
       console.log(`Client ${guid} connected.`);
       client.loop().catch((e) => {
         // Error here?
@@ -132,7 +138,7 @@ export class TcpServer {
           console.log(`Client ${guid} disconnected.`);
         });
       });
-      client.send(buildTelnetCommand(Command.WILL, Option.GMCP));
+      await this.emitEvent(this, "connect", client);
     }
   }
 }
