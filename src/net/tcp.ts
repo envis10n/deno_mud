@@ -1,4 +1,4 @@
-import { Parser, Option, Command, buildGMCP, buildTelnetCommand } from "https://deno.land/x/deno_telnet@0.1.5/mod.ts";
+import { Parser, Option, Command, buildGMCP, buildTelnetCommand } from "./telnet.ts";
 import { v4 } from "https://deno.land/std@0.75.0/uuid/mod.ts";
 
 export class TcpClient {
@@ -32,9 +32,14 @@ export class TcpClient {
   }
   public async send(data: string | Uint8Array): Promise<number> {
     let buffer: Uint8Array;
+    const isString = typeof data == "string";
     if (typeof data == "string") buffer = new TextEncoder().encode(data);
     else buffer = data;
-    return await this.conn.write(buffer);
+    const sent = await this.conn.write(buffer);
+    if (isString) {
+      await this.conn.write(buildTelnetCommand(Command.GA));
+    }
+    return sent;
   }
 }
 
@@ -45,7 +50,7 @@ export interface ITelnetHandler {
   onGoAhead: (this: TcpClient, ) => Promise<void>;
   onNegotiation: (this: TcpClient, command: number, option: number) => Promise<void>;
   onSubnegotiation: (this: TcpClient, option: number, data: Uint8Array) => Promise<void>;
-  onGMCP: (this: TcpClient, namespace: string, data: string | { [key: string]: any }) => Promise<void>;
+  onGMCP: (this: TcpClient, namespace: string, data: string | string[] | { [key: string]: any }) => Promise<void>;
 }
 
 export interface ITcpServerConfig {
@@ -71,6 +76,7 @@ export class TcpServer {
       let client: TcpClient | null = new TcpClient(conn, this.handlers);
       const guid: string = client.guid;
       console.log(`Client ${guid} connected.`);
+      await client.send("Welcome to deno_mud!\n(DEMO)> ");
       this.clientList.set(client.guid, client);
       client.loop().catch((e) => {
         // Error here?

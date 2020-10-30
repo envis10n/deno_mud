@@ -1,4 +1,5 @@
 import { server } from "./net/mod.ts";
+import { env } from "./config.ts";
 
 export default async function main() {
   server.listen().catch((e) => {
