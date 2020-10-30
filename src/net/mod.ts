@@ -4,8 +4,8 @@ import { buildGMCP, parseGMCPSupports } from "./telnet.ts";
 import { env } from "../config.ts";
 
 export const server = new TcpServer({
-  host: "0.0.0.0",
-  port: 13390,
+  host: env["HOST"] || "127.0.0.1",
+  port: isNaN(Number(env["PORT"])) ? 13390 : Number(env["PORT"]),
   handlers: {
     onData: async function (chunk: Uint8Array) {
       const data: string = new TextDecoder().decode(chunk);
