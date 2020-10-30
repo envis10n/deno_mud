@@ -30,13 +30,12 @@ export class TcpClient {
       this.parser.accumulate(b);
     }
   }
-  public async send(data: string | Uint8Array): Promise<number> {
+  public async send(data: string | Uint8Array, goAhead: boolean = false): Promise<number> {
     let buffer: Uint8Array;
-    const isString = typeof data == "string";
     if (typeof data == "string") buffer = new TextEncoder().encode(data);
     else buffer = data;
     const sent = await this.conn.write(buffer);
-    if (isString) {
+    if (goAhead) {
       await this.conn.write(buildTelnetCommand(Command.GA));
     }
     return sent;
@@ -65,26 +64,73 @@ export class TcpServer {
   public host: string;
   public port: number;
   public listener: Deno.Listener;
+  private eventListeners: Map<string, Array<(...args: any[]) => Promise<void>>> = new Map();
   constructor(config: ITcpServerConfig) {
     this.host = config.host || "localhost";
     this.port = config.port;
-    this.handlers = config.handlers;
+    const self = this;
+    this.handlers = {
+      async onData(chunk) {
+        await self.emitEvent(this, "data", chunk);
+        await config.handlers.onData.call(this, chunk);
+      },
+      async onGoAhead() {
+        await self.emitEvent(this, "goahead");
+        await config.handlers.onGoAhead.call(this);
+      },
+      async onGMCP(namespace, data) {
+        await self.emitEvent(this, "gmcp", namespace, data);
+        await config.handlers.onGMCP.call(this, namespace, data);
+      },
+      async onNegotiation(command, option) {
+        await self.emitEvent(this, "negotiation", command, option);
+        await config.handlers.onNegotiation.call(this, command, option);
+      },
+      async onSubnegotiation(option, data) {
+        await self.emitEvent(this, "subnegotiation", option, data);
+        await config.handlers.onSubnegotiation.call(this, option, data);
+      }
+    };
     this.listener = Deno.listen({ hostname: this.host, port: this.port, transport: "tcp" });
+  }
+  public addListener(event: string, listener: (...args: any[]) => Promise<void>): void {
+    if (!this.eventListeners.has(event)) this.eventListeners.set(event, []);
+    const listeners = this.eventListeners.get(event);
+    if (listeners == undefined) return;
+    listeners.push(listener);
+  }
+  public async emitEvent(self: any, event: string, ...args: any[]): Promise<void> {
+    const listeners = this.eventListeners.get(event);
+    if (listeners == undefined) return;
+    for (let i = 0; i < listeners.length; i++) {
+      const listener = listeners[i];
+      await listener.call(self, ...args);
+    }
+  }
+  public removeListener(event: string, listener: (...args: any[]) => Promise<void>): boolean {
+    const listeners = this.eventListeners.get(event);
+    if (listeners == undefined) return false;
+    const i = listeners.findIndex((l) => l.toString() == listener.toString());
+    if (i == -1) return false;
+    listeners.splice(i, 1);
+    return true;
   }
   public async listen(): Promise<void> {
     for await (const conn of this.listener) {
       let client: TcpClient | null = new TcpClient(conn, this.handlers);
       const guid: string = client.guid;
-      console.log(`Client ${guid} connected.`);
-      await client.send("Welcome to deno_mud!\n(DEMO)> ");
       this.clientList.set(client.guid, client);
+      await this.emitEvent(this, "connect", client);
+      console.log(`Client ${guid} connected.`);
       client.loop().catch((e) => {
         // Error here?
         console.log(`Client ${guid} error: ${e}`);
       }).finally(() => {
-        this.clientList.delete(guid);
-        client = null;
-        console.log(`Client ${guid} disconnected.`);
+        this.emitEvent(this, "disconnect", client).finally(() => {
+          this.clientList.delete(guid);
+          client = null;
+          console.log(`Client ${guid} disconnected.`);
+        });
       });
       client.send(buildTelnetCommand(Command.WILL, Option.GMCP));
     }

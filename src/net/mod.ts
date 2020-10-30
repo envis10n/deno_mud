@@ -10,7 +10,6 @@ export const server = new TcpServer({
     onData: async function (chunk: Uint8Array) {
       const data: string = new TextDecoder().decode(chunk);
       console.log(`<${this.guid}> DATA: ${data}`);
-      await this.send("(DEMO)> ");
     },
     onGoAhead: async function () {
       console.log(`<${this.guid}> GOAHEAD`);
