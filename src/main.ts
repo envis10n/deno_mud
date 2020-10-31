@@ -1,5 +1,4 @@
 import { server } from "./net/mod.ts";
-import { env } from "./config.ts";
 import { loadPlugins } from "./plugins.ts";
 
 const pluginContext: { [key: string]: any; } = {

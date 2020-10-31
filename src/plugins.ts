@@ -1,4 +1,4 @@
-import * as path from "https://deno.land/std@0.75.0/path/mod.ts";
+import { path } from "../deps.ts";
 import * as remotePlugins from "../plugins.ts";
 
 function log(...args: any[]): void {

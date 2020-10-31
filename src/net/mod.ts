@@ -1,6 +1,5 @@
-import { Option } from "https://deno.land/x/deno_telnet@0.1.5/mod.ts";
 import { TcpServer, ITelnetHandler, TcpClient } from "./tcp.ts";
-import { buildGMCP, parseGMCPSupports } from "./telnet.ts";
+import { buildGMCP, parseGMCPSupports, Option } from "./telnet.ts";
 import { env } from "../config.ts";
 
 function log(...args: any[]): void {

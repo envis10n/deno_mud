@@ -1,5 +1,5 @@
 import { Parser, Option, Command, buildGMCP, buildTelnetCommand, CompatibilityTable } from "./telnet.ts";
-import { v4 } from "https://deno.land/std@0.75.0/uuid/mod.ts";
+import { v4 } from "../../deps.ts";
 
 export class TcpClient {
   public parser = new Parser();
