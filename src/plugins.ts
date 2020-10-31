@@ -1,6 +1,6 @@
 import { denoMUDOptions } from "./config.ts";
 import { path } from "../deps.ts";
-import { IContext } from "./main.ts";
+import { IContext } from "./plugin_api.ts";
 
 function log(...args: any[]): void {
   console.log("[Plugins]", ...args);
