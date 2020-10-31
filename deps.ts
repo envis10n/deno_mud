@@ -5,4 +5,4 @@ export {
 } from "https://deno.land/std@0.75.0/testing/asserts.ts";
 export { v4 } from "https://deno.land/std@0.75.0/uuid/mod.ts";
 export { EventEmitter } from "https://deno.land/x/deno_events@0.1.1/mod.ts";
-export { concat } from "https://deno.land/std@0.63.0/bytes/mod.ts";
+export { concat } from "https://deno.land/std@0.75.0/bytes/mod.ts";
