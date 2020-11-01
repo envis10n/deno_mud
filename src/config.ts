@@ -1,6 +1,9 @@
 import { config } from "../deps.ts";
-import { readJSONAs } from "./util.ts"
+import { readJSONAs, existsSync, ensureFileSync } from "./util.ts"
 import { path } from "../deps.ts";
+
+const envPath = path.resolve(Deno.cwd(), ".env");
+const configPath = path.resolve(Deno.cwd(), "deno_mud.json");
 
 interface IDenoMUDPluginDef {
   enabled: boolean;
@@ -11,6 +14,16 @@ interface IDenoMUDOptions {
   plugins: IDenoMUDPluginDef[],
 }
 
-export const denoMUDOptions: IDenoMUDOptions = await readJSONAs(path.resolve(Deno.cwd(), "deno_mud.json"));
+ensureFileSync(configPath, JSON.stringify({
+  plugins: [],
+}, null, 2));
 
-export const env = config({path: `${Deno.cwd()}/.env`});
+export const denoMUDOptions: IDenoMUDOptions = await readJSONAs(configPath);
+
+let _env: { [key: string]: string } = {}
+
+if (existsSync(envPath)) {
+  _env = config({ path: envPath });
+}
+
+export const env = _env;

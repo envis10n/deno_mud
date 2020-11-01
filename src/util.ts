@@ -15,3 +15,22 @@ export function ensureDirSync(path: string): boolean {
     return true;
   }
 }
+
+export function ensureFileSync(path: string, data: string = ""): boolean {
+  try {
+    const finfo = Deno.statSync(path);
+    return finfo.isFile;
+  } catch (e) {
+    Deno.writeFileSync(path, new TextEncoder().encode(data));
+    return true;
+  }
+}
+
+export function existsSync(path: string): boolean {
+  try {
+    const finfo = Deno.statSync(path);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
