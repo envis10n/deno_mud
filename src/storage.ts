@@ -1,5 +1,5 @@
 import { env } from "./config.ts";
-import { path, v4 } from "../deps.ts";
+import { path, v4, createHash } from "../deps.ts";
 import { ensureDirSync, ensureFileSync } from "./util.ts";
 
 let _dbpath: string = env["DB_PATH"] || "./db";
@@ -31,7 +31,7 @@ export class Collection<T extends IDocument> {
     return path.resolve(this.dbBase, `${this.name}.json`);
   }
   public getChecksum(): string {
-    return ""; // todo: hash
+    return createHash("sha256").update(JSON.stringify(this.contents)).toString();
   }
   private serialize() {
     const clone: any = JSON.parse(JSON.stringify(this));
