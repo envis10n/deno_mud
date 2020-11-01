@@ -12,7 +12,7 @@ export function ensureDirSync(path: string): boolean {
     return finfo.isDirectory;
   } catch (e) {
     Deno.mkdirSync(path, { recursive: true });
-    return true;
+    return false;
   }
 }
 
@@ -22,7 +22,7 @@ export function ensureFileSync(path: string, data: string = ""): boolean {
     return finfo.isFile;
   } catch (e) {
     Deno.writeFileSync(path, new TextEncoder().encode(data));
-    return true;
+    return false;
   }
 }
 

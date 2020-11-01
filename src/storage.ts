@@ -30,9 +30,15 @@ export class Collection<T extends IDocument> {
   public path(): string {
     return path.resolve(this.dbBase, `${this.name}.json`);
   }
+  public getChecksum(): string {
+    return ""; // todo: hash
+  }
   private serialize() {
-    const d = JSON.stringify(this, null, 2);
-    ensureFileSync(this.path(), d);
+    const clone: any = JSON.parse(JSON.stringify(this));
+    delete clone.dbBase;
+    delete clone.name;
+    const d = JSON.stringify(clone, null, 2);
+    Deno.writeFileSync(this.path(), new TextEncoder().encode(d));
   }
   public insert(...docs: T[]): number {
     let count = 0;
@@ -44,6 +50,7 @@ export class Collection<T extends IDocument> {
       this.contents.push(doc);
       count++;
     }
+    this.checksum = this.getChecksum();
     this.serialize();
     return count;
   }
