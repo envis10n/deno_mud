@@ -1,6 +1,12 @@
 import { denoMUDOptions } from "./config.ts";
 import { path } from "../deps.ts";
-import { IContext } from "./plugin_api.ts";
+import { Database } from "./storage.ts";
+import { TcpServer, TcpClient } from "./net/tcp.ts";
+
+export interface IContext {
+  server: TcpServer,
+  db: Database,
+};
 
 function log(...args: any[]): void {
   console.log("[Plugins]", ...args);

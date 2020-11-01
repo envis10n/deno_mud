@@ -1,12 +1,8 @@
-import * as tcp from "./net/tcp.ts";
-import * as storage from "./storage.ts";
+export {TcpClient, TcpServer} from "./net/tcp.ts";
+export { Database, Collection } from "./storage.ts";
+import { ICollection as _ICollection } from "./storage.ts";
+import { IContext as _IContext, IPlugin as _IPlugin} from "./plugins.ts";
 
-export interface IContext {
-  server: tcp.TcpServer,
-  db: storage.Database,
-};
-
-export type TcpServer = tcp.TcpServer;
-export type TcpClient = tcp.TcpClient;
-export type Database = storage.Database;
-export type Collection<T> = storage.Collection<T>;
+export type ICollection = _ICollection;
+export type IContext = _IContext;
+export type IPlugin = _IPlugin;

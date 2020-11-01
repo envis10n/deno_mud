@@ -7,6 +7,10 @@
     {
       "enabled": true,
       "url": "https://raw.githubusercontent.com/envis10n/deno_mud_plugins/main/gmcp.ts"
+    },
+    {
+      "enabled": true,
+      "url": "https://raw.githubusercontent.com/envis10n/deno_mud_plugins/main/storage.ts"
     }
   ]
 }

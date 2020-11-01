@@ -9,4 +9,4 @@ done
 DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
 MAIN="${DIR}/../deno_mud.ts"
 
-deno run --allow-net --allow-read ${MAIN}
+deno run --allow-net --allow-read --allow-write ${MAIN}
