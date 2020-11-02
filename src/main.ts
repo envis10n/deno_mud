@@ -10,7 +10,6 @@ const pluginContext: IContext = {
 };
 
 export default async function main() {
-  console.log(env);
   await loadPlugins(pluginContext);
   server.listen().catch((e) => {
     console.error(e);

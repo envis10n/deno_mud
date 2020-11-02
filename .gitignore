@@ -2,3 +2,4 @@
 .env
 db/
 plugins/
+deno_mud.json
