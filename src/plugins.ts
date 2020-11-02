@@ -2,10 +2,11 @@ import { denoMUDOptions } from "./config.ts";
 import { path } from "../deps.ts";
 import { Database } from "./storage.ts";
 import { TcpServer, TcpClient } from "./net/tcp.ts";
+import { existsSync } from "./util.ts";
 
 export interface IContext {
   server: TcpServer,
-  db: Database,
+  db?: Database,
 };
 
 function log(...args: any[]): void {
@@ -33,11 +34,13 @@ export async function loadPlugin(path: string, context: IContext): Promise<void>
 
 export async function loadPlugins(context: IContext): Promise<void> {
   // Load local plugins.
-  for await (const ent of Deno.readDir(pluginDir)) {
-    if (!ent.isFile) continue;
-    const fpath = `file:///${path.resolve(pluginDir, ent.name)}`;
-    await loadPlugin(fpath, context);
-  }
+  if (existsSync(pluginDir)) {
+    for await (const ent of Deno.readDir(pluginDir)) {
+      if (!ent.isFile) continue;
+      const fpath = `file:///${path.resolve(pluginDir, ent.name)}`;
+      await loadPlugin(fpath, context);
+    }
+  } else log("Local plugin directory not found.");
   // Load remote plugins from plugins list file.
   for (const path of denoMUDOptions.plugins.filter((e) => e.enabled).map((e) => e.url)) {
     await loadPlugin(path, context);

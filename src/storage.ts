@@ -91,4 +91,6 @@ export class Database {
   }
 }
 
-export const db = new Database(dbPath);
+export const db: Database | undefined = env["USE_INTERNAL_STORAGE"] == "true" ? new Database(dbPath) : undefined;
+
+if (db == undefined) console.log("[Config] Skipping internal storage load.");
